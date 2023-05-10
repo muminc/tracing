@@ -1,0 +1,20 @@
+### Seafood Pizza
+POST http://localhost:8080/pizza
+Content-Type: application/json
+Accept: application/json
+
+{
+  "size" : "small",
+  "toppings" :  ["onions", "anchovies","prawns","sweetcorn"]
+}
+
+### Pineapple Pizza
+POST http://localhost:8080/pizza
+Content-Type: application/json
+Accept: application/json
+
+{
+"size" : "small",
+"toppings" :  ["mushroom","pineapple","olives"]
+}
+
