@@ -1,0 +1,59 @@
+private static HttpUriRequestBase createRdlRequest(RequestConfig config) {
+        final HttpPost request = new HttpPost("http://desktop-ss49gq7/Reports/api/v2.0/catalogitems");
+        request.setConfig(config);
+
+
+        String json= """
+                {
+                  "Name": "helloworld",
+                  "ContentType": "application/rdl",
+                  "Content": "@content",
+                  "Path": "/First/helloworld",
+                  "@odata.type": "#Model.Report"
+                }
+                """;
+
+        String encodedString = LoadXML.getEncodedString();
+
+        json = json.replace("@content", encodedString);
+
+        final StringEntity entity = new StringEntity(json);
+
+        request.setHeader("Content-Type","application/json");
+        request.setEntity(entity);
+        return request;
+    }
+
+
+
+public static String getEncodedString() {
+        try {
+
+            InputStream is = LoadXML.class.getResourceAsStream("/helloworld.rdl");
+
+            DocumentBuilderFactory dFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(is);
+
+            StringWriter sw = new StringWriter();
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            transformer.setOutputProperty(OutputKeys.INDENT, "no");
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+
+            transformer.transform(new DOMSource(doc), new StreamResult(sw));
+            String s = sw.toString();
+            System.out.println(s);
+
+            String encodedString = Base64.getEncoder().encodeToString(s.getBytes());
+            //System.out.println("encodedString = " + encodedString);
+            return encodedString;
+
+
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Error converting to String", ex);
+        }
+    }
