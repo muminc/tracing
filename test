@@ -1,5 +1,5 @@
 private static HttpUriRequestBase createRdlRequest(RequestConfig config) {
-        final HttpPost request = new HttpPost("http://desktop-ss49gq7/Reports/api/v2.0/catalogitems");
+        final HttpPost request = new HttpPost("http://localhost/Reports/api/v2.0/catalogitems");
         request.setConfig(config);
 
 
@@ -13,7 +13,33 @@ private static HttpUriRequestBase createRdlRequest(RequestConfig config) {
                 }
                 """;
 
-        String encodedString = LoadXML.getEncodedString();
+        String encodedString = getEncodedString();
+
+        json = json.replace("@content", encodedString);
+
+        final StringEntity entity = new StringEntity(json);
+
+        request.setHeader("Content-Type","application/json");
+        request.setEntity(entity);
+        return request;
+    }
+
+rivate static HttpUriRequestBase listExistingRequest(RequestConfig config) {
+        final HttpGet request = new HttpGet("http://localhost/Reports/api/v2.0/catalogitems");
+        request.setConfig(config);
+
+
+        String json= """
+                {
+                  "Name": "helloworld",
+                  "ContentType": "application/rdl",
+                  "Content": "@content",
+                  "Path": "/First",
+                  "@odata.type": "#Model.Report"
+                }
+                """;
+
+        String encodedString = getEncodedString();
 
         json = json.replace("@content", encodedString);
 
