@@ -52,7 +52,7 @@ rivate static HttpUriRequestBase listExistingRequest(RequestConfig config) {
 
 
 
-public static String getEncodedString() {
+ public static String getEncodedString() {
         try {
 
             InputStream is = LoadXML.class.getResourceAsStream("/helloworld.rdl");
@@ -60,6 +60,24 @@ public static String getEncodedString() {
             DocumentBuilderFactory dFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(is);
+
+
+            String referredDataSourceName = extractReferredDataSourceName(doc);
+
+            XPath xpath2 = XPathFactory.newInstance().newXPath();
+            XPathExpression dataSourceExpression = xpath2.compile("Report/DataSources/DataSource");
+            NodeList dataSourcesNodeList = (NodeList) dataSourceExpression.evaluate(doc, XPathConstants.NODESET);
+
+            Node dataSourceNode = dataSourcesNodeList.item(0);
+            Node dataSourcesNode = dataSourceNode.getParentNode();
+            dataSourcesNode.removeChild(dataSourceNode);
+            dataSourcesNode.setTextContent(null);
+
+
+            Element dataSourceElement = createDataSourceElement(doc, referredDataSourceName, "MyDataSourceReference");
+
+            dataSourcesNode.appendChild(dataSourceElement);
+
 
             StringWriter sw = new StringWriter();
             TransformerFactory tf = TransformerFactory.newInstance();
@@ -74,7 +92,7 @@ public static String getEncodedString() {
             System.out.println(s);
 
             String encodedString = Base64.getEncoder().encodeToString(s.getBytes());
-            //System.out.println("encodedString = " + encodedString);
+            System.out.println("encodedString = " + encodedString);
             return encodedString;
 
 
@@ -82,4 +100,30 @@ public static String getEncodedString() {
         } catch (Exception ex) {
             throw new RuntimeException("Error converting to String", ex);
         }
+    }
+
+    private static String extractReferredDataSourceName(Document doc) throws XPathExpressionException {
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        XPathExpression dataSetDataSourceName = xpath.compile("Report/DataSets/DataSet/Query/DataSourceName");
+        NodeList dataExprNodeList = (NodeList) dataSetDataSourceName.evaluate(doc, XPathConstants.NODESET);
+        String referredDataSourceName = dataExprNodeList.item(0).getTextContent();
+        return referredDataSourceName;
+    }
+
+    private static Element createDataSourceElement(Document doc, String referredDataSourceName, String dataSourceRefence) {
+        Element dataSourceElement = doc.createElement("DataSource");
+        dataSourceElement.setAttribute("Name", referredDataSourceName);
+
+        Element dataSourceReference = doc.createElement("DataSourceReference");
+        dataSourceReference.setTextContent(dataSourceRefence);
+        dataSourceElement.appendChild(dataSourceReference);
+
+        Element securityTypeElement = doc.createElement("rd:SecurityType");
+        securityTypeElement.setTextContent("None");
+        dataSourceElement.appendChild(securityTypeElement);
+
+        Element datasourceIdType = doc.createElement("rd:DataSourceID");
+        datasourceIdType.setTextContent(UUID.randomUUID().toString());
+        dataSourceElement.appendChild(datasourceIdType);
+        return dataSourceElement;
     }
